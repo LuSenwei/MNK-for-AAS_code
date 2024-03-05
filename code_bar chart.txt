@@ -1,0 +1,334 @@
+import pandas as pd
+
+# Load the data from the uploaded Excel file
+data_path = '/mnt/data/VAS.xlsx'
+data = pd.read_excel(data_path)
+
+# Display the first few rows of the dataframe to understand its structure
+data.head()
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Setting the style
+sns.set(style="whitegrid")
+
+# Creating a figure and axis
+plt.figure(figsize=(10, 6))
+
+# Plotting the bars with error bars
+sns.barplot(x='Time Point', y='Mean', hue='Group', data=merged_data, ci=None, palette='pastel', capsize=.05, errwidth=1.5, yerr=merged_data['SEM'])
+
+# Enhancing the plot
+plt.xlabel('Time Point', fontsize=14, fontweight='bold')
+plt.ylabel('Visual Analogue Scale', fontsize=14, fontweight='bold')
+plt.title('Visual Analogue Scale Scores by Group and Time Point', fontsize=16, fontweight='bold')
+plt.legend(title='Group')
+
+# Saving the plot as a TIFF file with 300 DPI
+plt.savefig('/mnt/data/VAS_chart.tiff', format='tiff', dpi=300, bbox_inches='tight')
+
+# Display the plot
+plt.show()
+
+# Providing the file path for the user
+file_path = '/mnt/data/VAS_chart.tiff'
+file_path
+
+# Separate data by groups for plotting
+group1_data = merged_data[merged_data['Group'] == 'Group1']
+group2_data = merged_data[merged_data['Group'] == 'Group2']
+
+# Getting unique time points for x-axis
+time_points = merged_data['Time Point'].unique()
+
+# Preparing plot data
+groups = ['Group1', 'Group2']
+colors = ['skyblue', 'lightgreen']
+x = np.arange(len(time_points))  # the label locations
+width = 0.35  # the width of the bars
+
+# Creating the plot
+fig, ax = plt.subplots(figsize=(10, 6))
+rects1 = ax.bar(x - width/2, group1_data['Mean'], width, yerr=group1_data['SEM'], label='Group1', color=colors[0], capsize=5)
+rects2 = ax.bar(x + width/2, group2_data['Mean'], width, yerr=group2_data['SEM'], label='Group2', color=colors[1], capsize=5)
+
+# Adding some text for labels, title, and custom x-axis tick labels, etc.
+ax.set_xlabel('Time Point', fontsize=14, fontweight='bold')
+ax.set_ylabel('Visual Analogue Scale', fontsize=14, fontweight='bold')
+ax.set_title('Visual Analogue Scale Scores by Group and Time Point', fontsize=16, fontweight='bold')
+ax.set_xticks(x)
+ax.set_xticklabels(time_points)
+ax.legend()
+
+# Making the font bold
+for label in (ax.get_xticklabels() + ax.get_yticklabels()):
+    label.set_fontweight('bold')
+
+# Saving the plot as a TIFF file with 300 DPI
+plt.savefig('/mnt/data/VAS_chart_corrected.tiff', format='tiff', dpi=300, bbox_inches='tight')
+
+# Display the plot
+plt.show()
+
+# Providing the corrected file path
+corrected_file_path = '/mnt/data/VAS_chart_corrected.tiff'
+corrected_file_path
+
+# Reordering the data according to the specified sequence and ensuring correct duplication for Group2 at TP1 is addressed
+reordered_data = merged_data.loc[[0, 1, 2, 3, 4, 5], :]
+
+# Setting a color palette more suitable for scientific publications
+colors_scientific = ['steelblue', 'seagreen', 'mediumpurple', 'steelblue', 'seagreen', 'mediumpurple']
+
+# Creating the plot again with reordered data and updated colors
+fig, ax = plt.subplots(figsize=(12, 7))
+for idx, (group_time, row) in enumerate(reordered_data.iterrows()):
+    ax.bar(idx, row['Mean'], yerr=row['SEM'], label=f'{row["Group"]} {row["Time Point"]}' if idx < 3 or idx == 3 else "", color=colors_scientific[idx], capsize=5)
+
+# Customizing the plot
+ax.set_xlabel('Group and Time Point', fontsize=14, fontweight='bold')
+ax.set_ylabel('Visual Analogue Scale', fontsize=14, fontweight='bold')
+ax.set_title('Visual Analogue Scale Scores by Group and Time Point', fontsize=16, fontweight='bold')
+
+# Setting custom x-axis labels
+ax.set_xticks(range(len(reordered_data)))
+ax.set_xticklabels([f'{row["Group"]} {row["Time Point"]}' for index, row in reordered_data.iterrows()], rotation=45, ha="right")
+
+# Making the font bold
+for label in (ax.get_xticklabels() + ax.get_yticklabels()):
+    label.set_fontweight('bold')
+
+# Saving the plot as a TIFF file with 300 DPI in the corrected colors and order
+plt.savefig('/mnt/data/VAS_chart_reordered.tiff', format='tiff', dpi=300, bbox_inches='tight')
+
+# Display the plot
+plt.show()
+
+# Providing the new file path
+reordered_file_path = '/mnt/data/VAS_chart_reordered.tiff'
+reordered_file_path
+
+# Re-creating the plot with p-value annotation for TP1 vs TP2
+fig, ax = plt.subplots(figsize=(12, 7))
+
+# Plotting each bar
+for idx, (group_time, row) in enumerate(reordered_data.iterrows()):
+    ax.bar(idx, row['Mean'], yerr=row['SEM'], label=f'{row["Group"]} {row["Time Point"]}' if idx < 3 or idx == 3 else "", color=colors_scientific[idx], capsize=5)
+
+# Customizing the plot
+ax.set_xlabel('Group and Time Point', fontsize=14, fontweight='bold')
+ax.set_ylabel('Visual Analogue Scale', fontsize=14, fontweight='bold')
+ax.set_title('Visual Analogue Scale Scores by Group and Time Point', fontsize=16, fontweight='bold')
+ax.set_xticks(range(len(reordered_data)))
+ax.set_xticklabels([f'{row["Group"]} {row["Time Point"]}' for index, row in reordered_data.iterrows()], rotation=45, ha="right")
+
+# Annotating the p-value between TP1 and TP2
+max_height = max(reordered_data['Mean'] + reordered_data['SEM'])
+ax.text(0.5, max_height + 0.2, f'p = {p_value:.1e}', ha='center', va='bottom', fontsize=12, fontweight='bold')
+
+# Making the font bold
+for label in (ax.get_xticklabels() + ax.get_yticklabels()):
+    label.set_fontweight('bold')
+
+# Saving the updated plot
+plt.savefig('/mnt/data/VAS_chart_with_p_value.tiff', format='tiff', dpi=300, bbox_inches='tight')
+
+# Display the plot
+plt.show()
+
+# Providing the updated file path
+updated_file_path_with_p_value = '/mnt/data/VAS_chart_with_p_value.tiff'
+updated_file_path_with_p_value
+
+# Formatting the p-value according to the specified rules
+if p_value < 0.001:
+    p_value_formatted = "p < 0.001***"
+elif p_value < 0.01:
+    p_value_formatted = f"p = {p_value:.3f}***"
+else:
+    p_value_formatted = f"p = {p_value:.2f}"
+
+# Re-creating the plot with the correctly formatted p-value annotation
+fig, ax = plt.subplots(figsize=(12, 7))
+
+# Plotting each bar
+for idx, (group_time, row) in enumerate(reordered_data.iterrows()):
+    ax.bar(idx, row['Mean'], yerr=row['SEM'], label=f'{row["Group"]} {row["Time Point"]}' if idx < 3 or idx == 3 else "", color=colors_scientific[idx], capsize=5)
+
+# Customizing the plot
+ax.set_xlabel('Group and Time Point', fontsize=14, fontweight='bold')
+ax.set_ylabel('Visual Analogue Scale', fontsize=14, fontweight='bold')
+ax.set_title('Visual Analogue Scale Scores by Group and Time Point', fontsize=16, fontweight='bold')
+ax.set_xticks(range(len(reordered_data)))
+ax.set_xticklabels([f'{row["Group"]} {row["Time Point"]}' for index, row in reordered_data.iterrows()], rotation=45, ha="right")
+
+# Annotating the correctly formatted p-value
+ax.text(0.5, max_height + 0.2, p_value_formatted, ha='center', va='bottom', fontsize=12, fontweight='bold')
+
+# Making the font bold
+for label in (ax.get_xticklabels() + ax.get_yticklabels()):
+    label.set_fontweight('bold')
+
+# Saving the updated plot
+plt.savefig('/mnt/data/VAS_chart_with_corrected_p_value.tiff', format='tiff', dpi=300, bbox_inches='tight')
+
+# Display the plot
+plt.show()
+
+# Providing the updated file path with the corrected p-value format
+updated_file_path_with_corrected_p_value = '/mnt/data/VAS_chart_with_corrected_p_value.tiff'
+updated_file_path_with_corrected_p_value
+
+from scipy.stats import ttest_rel
+
+# Performing paired t-test for Group1 TP1 vs TP2 and Group2 TP1 vs TP2
+p_value_group1 = ttest_rel(data['Group1 at TP1'], data['Group1 at TP2']).pvalue
+p_value_group2 = ttest_rel(data['Group2 at TP1'], data['Group2 at TP2']).pvalue
+
+# Formatting the p-values according to the specified rules
+def format_p_value(p):
+    if p < 0.001:
+        return "p < 0.001***"
+    elif p < 0.01:
+        return f"p = {p:.3f}***"
+    else:
+        return f"p = {p:.2f}"
+
+p_value_formatted_group1 = format_p_value(p_value_group1)
+p_value_formatted_group2 = format_p_value(p_value_group2)
+
+# Re-creating the plot with the correctly formatted p-value annotations for Group1 and Group2
+fig, ax = plt.subplots(figsize=(12, 7))
+
+# Plotting each bar
+for idx, (group_time, row) in enumerate(reordered_data.iterrows()):
+    ax.bar(idx, row['Mean'], yerr=row['SEM'], label=f'{row["Group"]} {row["Time Point"]}' if idx < 3 or idx == 3 else "", color=colors_scientific[idx], capsize=5)
+
+# Customizing the plot
+ax.set_xlabel('Group and Time Point', fontsize=14, fontweight='bold')
+ax.set_ylabel('Visual Analogue Scale', fontsize=14, fontweight='bold')
+ax.set_title('Visual Analogue Scale Scores by Group and Time Point', fontsize=16, fontweight='bold')
+ax.set_xticks(range(len(reordered_data)))
+ax.set_xticklabels([f'{row["Group"]} {row["Time Point"]}' for index, row in reordered_data.iterrows()], rotation=45, ha="right")
+
+# Annotating the correctly formatted p-values
+group1_annotation_position = (0 + 1) / 2  # Between Group1 TP1 and TP2
+group2_annotation_position = (3 + 4) / 2  # Between Group2 TP1 and TP2, considering the sequence and correction for unique positions
+ax.text(group1_annotation_position, max_height + 0.3, p_value_formatted_group1, ha='center', va='bottom', fontsize=12, fontweight='bold')
+ax.text(group2_annotation_position, max_height + 0.3, p_value_formatted_group2, ha='center', va='bottom', fontsize=12, fontweight='bold')
+
+# Making the font bold
+for label in (ax.get_xticklabels() + ax.get_yticklabels()):
+    label.set_fontweight('bold')
+
+# Saving the updated plot with paired t-test p-value annotations
+plt.savefig('/mnt/data/VAS_chart_with_paired_p_values.tiff', format='tiff', dpi=300, bbox_inches='tight')
+
+# Display the plot
+plt.show()
+
+# Providing the updated file path with paired t-test p-value annotations
+updated_file_path_with_paired_p_values = '/mnt/data/VAS_chart_with_paired_p_values.tiff'
+updated_file_path_with_paired_p_values
+
+# Adjusting the plot according to the specified requirements
+
+# Creating the plot again with specified adjustments
+fig, ax = plt.subplots(figsize=(12, 7))
+
+# Plotting each bar
+for idx, (group_time, row) in enumerate(reordered_data.iterrows()):
+    ax.bar(idx, row['Mean'], yerr=row['SEM'], label=f'{row["Group"]} {row["Time Point"]}' if idx < 3 or idx == 3 else "", color=colors_scientific[idx], capsize=5)
+
+# Removing vertical gridlines and making horizontal gridlines dashed
+ax.yaxis.grid(True, linestyle='--')  # Only horizontal gridlines
+ax.xaxis.grid(False)  # No vertical gridlines
+
+# Customizing the plot
+ax.set_xlabel('Group and Time Point', fontsize=14, fontweight='bold')
+ax.set_ylabel('Visual Analogue Scale', fontsize=14, fontweight='bold')
+ax.set_title('Visual Analogue Scale Scores by Group and Time Point', fontsize=16, fontweight='bold')
+ax.set_xticks(range(len(reordered_data)))
+ax.set_xticklabels([f'{row["Group"]} {row["Time Point"]}' for index, row in reordered_data.iterrows()], rotation=45, ha="right")
+
+# Extending y-axis to accommodate p-value annotations within the plot area
+ax.set_ylim(bottom=0, top=max_height + 1.5)
+
+# Annotating p-values with comparison lines
+def draw_p_value_line(start_idx, end_idx, height, p_value_text):
+    ax.plot([start_idx, end_idx], [height, height], color="black", lw=1.5)  # Comparison line
+    ax.text((start_idx + end_idx) / 2, height, p_value_text, ha='center', va='bottom', fontsize=12, fontweight='bold')
+
+draw_p_value_line(0, 1, max_height + 0.6, p_value_formatted_group1)
+draw_p_value_line(3, 4, max_height + 0.6, p_value_formatted_group2)
+
+# Making the font bold
+for label in (ax.get_xticklabels() + ax.get_yticklabels()):
+    label.set_fontweight('bold')
+
+# Saving the updated plot with the requested adjustments
+plt.savefig('/mnt/data/VAS_chart_with_final_adjustments.tiff', format='tiff', dpi=300, bbox_inches='tight')
+
+# Display the plot
+plt.show()
+
+# Providing the updated file path with final adjustments
+final_adjusted_file_path = '/mnt/data/VAS_chart_with_final_adjustments.tiff'
+final_adjusted_file_path
+
+
+
+# Load the new dataset from the uploaded Excel file
+new_data_path = '/mnt/data/Kofoed score of ankle.xlsx'
+new_data = pd.read_excel(new_data_path)
+
+# Display the first few rows of the dataframe to understand its structure
+new_data.head()
+
+# Performing paired t-tests for the new data "Group1 TP1 vs TP2" and "Group2 TP1 vs TP2"
+new_p_value_group1 = ttest_rel(new_data['Group1 at TP1'], new_data['Group1 at TP2']).pvalue
+new_p_value_group2 = ttest_rel(new_data['Group2 at TP1'], new_data['Group2 at TP2']).pvalue
+
+# Formatting the new p-values according to the specified rules
+new_p_value_formatted_group1 = format_p_value(new_p_value_group1)
+new_p_value_formatted_group2 = format_p_value(new_p_value_group2)
+
+# Setting the adjusted color palette with dark blue for TP1
+colors_for_new_data = ['darkblue', 'coral', 'mediumseagreen', 'darkblue', 'coral', 'mediumseagreen']
+
+# Creating the plot with the new data and specifications
+fig, ax = plt.subplots(figsize=(12, 7))
+
+# Plotting each bar with the adjusted colors for the new data
+for idx, (group_time, row) in enumerate(new_merged_data.iterrows()):
+    ax.bar(idx, row['Mean'], yerr=row['SEM'], color=colors_for_new_data[idx], capsize=5)
+
+# Removing vertical gridlines and making horizontal gridlines dashed
+ax.yaxis.grid(True, linestyle='--')  # Only horizontal gridlines
+ax.xaxis.grid(False)  # No vertical gridlines
+
+# Customizing the plot with new labels
+ax.set_xlabel('Group and Time Point', fontsize=14, fontweight='bold')
+ax.set_ylabel('Kofoed score of ankle', fontsize=14, fontweight='bold')
+ax.set_title('Kofoed Score of Ankle by Group and Time Point', fontsize=16, fontweight='bold')
+ax.set_xticks(range(len(new_merged_data)))
+ax.set_xticklabels([f'{row["Group"]} {row["Time Point"]}' for index, row in new_merged_data.iterrows()], rotation=45, ha="right")
+
+# Extending y-axis
+new_max_height = max(new_merged_data['Mean'] + new_merged_data['SEM'])
+ax.set_ylim(bottom=0, top=new_max_height + 10)
+
+# Annotating new p-values with comparison lines using the new y-axis limits
+draw_p_value_line(0, 1, new_max_height + 5, new_p_value_formatted_group1)
+draw_p_value_line(3, 4, new_max_height + 5, new_p_value_formatted_group2)
+
+# Saving the plot with the new data and specifications
+plt.savefig('/mnt/data/Kofoed_Score_Ankle_chart.tiff', format='tiff', dpi=300, bbox_inches='tight')
+
+# Display the plot
+plt.show()
+
+# Providing the updated file path for the new data plot
+new_data_file_path = '/mnt/data/Kofoed_Score_Ankle_chart.tiff'
+new_data_file_path

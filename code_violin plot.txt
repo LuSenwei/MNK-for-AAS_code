@@ -1,0 +1,168 @@
+import pandas as pd
+
+# Load the data to see its structure
+data = pd.read_excel("/mnt/data/VAS.xlsx")
+data.head()
+
+from scipy.stats import ttest_ind
+
+# Remove the first row as it repeats header information
+data = data.drop(index=0).reset_index(drop=True)
+
+# Convert data to long format for easier plotting and analysis
+data_long = pd.melt(data, id_vars="Time Piont", var_name="Group_Time", value_name="VAS")
+data_long["Time Point"] = data_long["Group_Time"].str.extract(r'(TP\d)')
+data_long["Group"] = data_long["Group_Time"].str.extract(r'(Group\d)')
+data_long["VAS"] = pd.to_numeric(data_long["VAS"])
+
+# Drop unnecessary columns and rows with missing data if any
+data_long = data_long.drop(columns=["Time Piont", "Group_Time"]).dropna()
+
+# Separate data by time point for t-tests
+t_test_results = {}
+for time_point in data_long["Time Point"].unique():
+    group1_data = data_long[(data_long["Time Point"] == time_point) & (data_long["Group"] == "Group1")]["VAS"]
+    group2_data = data_long[(data_long["Time Point"] == time_point) & (data_long["Group"] == "Group2")]["VAS"]
+    t_stat, p_val = ttest_ind(group1_data, group2_data)
+    t_test_results[time_point] = p_val
+
+t_test_results
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
+
+# Setting up the plot
+plt.figure(figsize=(10, 6))
+sns.set(style="whitegrid", font_scale=1.2)
+ax = sns.violinplot(x="Time Point", y="VAS", hue="Group", data=data_long, split=True, inner="quart", palette="muted")
+ax.set_title("Visual Analogue Scale by Time Point and Group", fontsize=14, weight='bold')
+ax.set_xlabel("Time Point", fontsize=12, weight='bold')
+ax.set_ylabel("Visual Analogue Scale", fontsize=12, weight='bold')
+ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+
+# Annotating with p-values
+significance_marks = {key: ("n.s." if val > 0.05 else "***" if val < 0.001 else "*") for key, val in t_test_results.items()}
+for time_point, p_val in t_test_results.items():
+    y = data_long["VAS"].max() + 0.5
+    x = list(data_long["Time Point"].unique()).index(time_point)
+    ax.text(x, y, f"p = {p_val:.3f} {significance_marks[time_point]}", ha='center', va='bottom', fontsize=10, weight='bold')
+
+plt.legend(title="Group", title_fontsize='13', loc='upper left', fontsize='10')
+plt.tight_layout()
+
+# Save the plot as TIFF with 300 DPI
+plt.savefig("/mnt/data/VAS_violin_plot.tiff", format="tiff", dpi=300)
+
+plt.show()
+
+# Function to format p-values according to the specified rules
+def format_p_value(p):
+    if p < 0.001:
+        return "p < 0.001"
+    elif p < 0.01:
+        return f"p = {p:.3f}"
+    else:
+        return f"p = {p:.2f}"
+
+# Updating the plot with the corrected p-value annotations
+plt.figure(figsize=(10, 6))
+sns.set(style="whitegrid", font_scale=1.2)
+ax = sns.violinplot(x="Time Point", y="VAS", hue="Group", data=data_long, split=True, inner="quart", palette="muted")
+ax.set_title("Visual Analogue Scale by Time Point and Group", fontsize=14, weight='bold')
+ax.set_xlabel("Time Point", fontsize=12, weight='bold')
+ax.set_ylabel("Visual Analogue Scale", fontsize=12, weight='bold')
+ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+
+# Re-annotating with formatted p-values
+for time_point, p_val in t_test_results.items():
+    y = data_long["VAS"].max() + 0.5
+    x = list(data_long["Time Point"].unique()).index(time_point)
+    formatted_p_value = format_p_value(p_val)
+    annotation = f"{formatted_p_value} {significance_marks[time_point]}" if p_val < 0.05 else formatted_p_value
+    ax.text(x, y, annotation, ha='center', va='bottom', fontsize=10, weight='bold')
+
+plt.legend(title="Group", title_fontsize='13', loc='upper left', fontsize='10')
+plt.tight_layout()
+
+# Re-save the plot with corrected annotations
+plt.savefig("/mnt/data/VAS_violin_plot_corrected.tiff", format="tiff", dpi=300)
+
+plt.show()
+
+# Updating the plot with the legend inside the plot, positioned at the top right corner
+plt.figure(figsize=(10, 6))
+sns.set(style="whitegrid", font_scale=1.2)
+ax = sns.violinplot(x="Time Point", y="VAS", hue="Group", data=data_long, split=True, inner="quart", palette="muted")
+ax.set_title("Visual Analogue Scale by Time Point and Group", fontsize=14, weight='bold')
+ax.set_xlabel("Time Point", fontsize=12, weight='bold')
+ax.set_ylabel("Visual Analogue Scale", fontsize=12, weight='bold')
+ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+
+# Re-annotating with formatted p-values
+for time_point, p_val in t_test_results.items():
+    y = data_long["VAS"].max() + 0.5
+    x = list(data_long["Time Point"].unique()).index(time_point)
+    formatted_p_value = format_p_value(p_val)
+    annotation = f"{formatted_p_value} {significance_marks[time_point]}" if p_val < 0.05 else formatted_p_value
+    ax.text(x, y, annotation, ha='center', va='bottom', fontsize=10, weight='bold')
+
+# Placing legend inside the plot at the top right corner
+plt.legend(title="Group", title_fontsize='13', loc='upper right', fontsize='10')
+plt.tight_layout()
+
+# Re-save the plot with the internal legend positioning
+plt.savefig("/mnt/data/VAS_violin_plot_legend_inside.tiff", format="tiff", dpi=300)
+
+plt.show()
+
+
+
+# Load the new dataset to see its structure
+new_data = pd.read_excel("/mnt/data/Kofoed score of ankle.xlsx")
+new_data.head()
+
+# Convert new data to long format for easier plotting and analysis
+new_data_long = pd.melt(new_data, id_vars="Time Piont", var_name="Group_Time", value_name="Kofoed_Score")
+new_data_long["Time Point"] = new_data_long["Group_Time"].str.extract(r'(TP\d)')
+new_data_long["Group"] = new_data_long["Group_Time"].str.extract(r'(Group\d)')
+new_data_long["Kofoed_Score"] = pd.to_numeric(new_data_long["Kofoed_Score"])
+
+# Separate data by time point for t-tests
+new_t_test_results = {}
+for time_point in new_data_long["Time Point"].unique():
+    group1_data = new_data_long[(new_data_long["Time Point"] == time_point) & (new_data_long["Group"] == "Group1")]["Kofoed_Score"]
+    group2_data = new_data_long[(new_data_long["Time Point"] == time_point) & (new_data_long["Group"] == "Group2")]["Kofoed_Score"]
+    t_stat, p_val = ttest_ind(group1_data, group2_data)
+    new_t_test_results[time_point] = p_val
+
+# Format p-values according to the specified rules for the new dataset
+new_significance_marks = {key: ("n.s." if val > 0.05 else "***" if val < 0.001 else "*") for key, val in new_t_test_results.items()}
+
+new_t_test_results, new_significance_marks
+
+# Generate the violin plot for "Kofoed score of ankle"
+plt.figure(figsize=(10, 6))
+sns.set(style="whitegrid", font_scale=1.2)
+ax = sns.violinplot(x="Time Point", y="Kofoed_Score", hue="Group", data=new_data_long, split=True, inner="quart", palette="muted")
+ax.set_title("Kofoed Score of Ankle by Time Point and Group", fontsize=14, weight='bold')
+ax.set_xlabel("Time Point", fontsize=12, weight='bold')
+ax.set_ylabel("Kofoed Score of Ankle", fontsize=12, weight='bold')
+ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+
+# Annotating with formatted p-values
+for time_point, p_val in new_t_test_results.items():
+    y = new_data_long["Kofoed_Score"].max() + 5  # Adjust for visibility
+    x = list(new_data_long["Time Point"].unique()).index(time_point)
+    formatted_p_value = format_p_value(p_val)
+    annotation = f"{formatted_p_value} {new_significance_marks[time_point]}" if p_val < 0.05 else formatted_p_value
+    ax.text(x, y, annotation, ha='center', va='bottom', fontsize=10, weight='bold')
+
+# Placing legend inside the plot at the top right corner
+plt.legend(title="Group", title_fontsize='13', loc='upper right', fontsize='10')
+plt.tight_layout()
+
+# Save the plot as TIFF with 300 DPI and updated naming convention
+plt.savefig("/mnt/data/Kofoed_Score_of_Ankle_violin_plot.tiff", format="tiff", dpi=300)
+
+plt.show()
